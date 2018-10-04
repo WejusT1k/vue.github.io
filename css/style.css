@@ -1,0 +1,18 @@
+th,td{
+    text-align: left;
+}
+table{
+    width: 100%;
+}
+[v-cloak]{
+    display: none;
+}
+.edit {
+    display: none;
+}
+.editing .edit {
+    display: inline-block
+}
+.editing .view {
+    display: none;
+}
