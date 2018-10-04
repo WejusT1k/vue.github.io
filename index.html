@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div id="root">
+    <router-view>
+
+    </router-view>
+</div>
+<script type="text/javascript" src="js/vue.js"></script>
+<script type="text/javascript" src="js/lodash.js"></script>
+<script type="text/javascript" src="js/vue-router.js"></script>
+<script type="text/javascrip" src="js/home.js"></script>
+<script>
+
+
+    fetch("test.json")
+        .then(response => response.json())
+        .then(json => {
+            let data = json.concat();
+            const Foo = {
+                props: ['record'],
+                template: `<div>
+                    <div v-for="(value,key) in record"><b>{{ key }}</b>:{{value}}</div>
+                </div>`
+            }
+            const component = Vue.component('my-checkbox', {
+                template: `
+<div>
+     <input v-model="search" type="text" placeholder="search"/>
+            <span style="float:right;">
+                 Итого: {{ getTotalCurrency() }}
+             </span>
+     <template v-if="curTab.length > 0">
+         <table>
+             <thead>
+            <tr>
+                <th>№</th>
+                <template v-if=" typeof curTab[0] === 'object'">
+                    <th v-for="(value,key) in curTab[0]" v-on:click="()=>changeSortColumn(key)">
+                        {{ key }}
+                    </th>
+                    <th></th>
+                </template>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(item,index) in orderedRecord()" :key="item.id" :class="{editing: item.id == editedRecord}" v-cloak>
+                <td>{{ index + 1 }}</td>
+                <template v-if="typeof item === 'object'">
+                    <td v-for="(value,key) in item">
+                        <template v-if="key != 'id'">
+                            <span class="view">{{value}}</span>
+                            <input  v-model="item[key]" class="edit" />
+                        </template>
+                        <template v-else>
+                            {{ value }}
+                        </template>
+
+                    </td>
+                    <td>
+                        <button class="view" @click="editData(item)">edit</button>
+                        <button class="edit" @click="saveData(item)">save</button>
+                        <router-link :to="{name:'detail',params: {id : item.id, record : item}}">Details</router-link>
+                    </td>
+                </template>
+            </tr>
+            </tbody>
+        </table>
+    </template>
+    <h5 v-else>
+        Список пустой
+    </h5>
+</div>
+`,
+                data() {
+                    return {curTab: data, search: '',sortColumn: null, reverse: false, editMode: false,editedRecord: null,editChache: null }
+                },
+                methods: {
+                    orderedRecord: function () {
+                        let currentItems = this.filtredRecord();
+                        let direction = this.reverse ? 'desc' : 'asc';
+                        return this.sortColumn ? _.orderBy(currentItems, this.sortColumn.toString(), direction) : currentItems;
+                    },
+                    changeSortColumn: function (type) {
+                        this.reverse = this.sortColumn === type ? !this.reverse : this.reverse;
+                        this.sortColumn = type;
+                    },
+                    filtredRecord: function () {
+                        let initData = this.curTab;
+                        return initData.filter((item) => {
+                            return Object.values(item).some((val) => {
+                                return val.toString().toLowerCase().indexOf(this.search.toLowerCase()) >= 0
+                            });
+                        })
+                    },
+                    getTotalCurrency: function () {
+                        let currentItem = this.filtredRecord();
+                        let result = currentItem.reduce((accumulator, currValue) => {
+                            return accumulator + /*!window.isNaN(currValue.currency) ? parseInt(currValue.currency) : 0;*/ parseInt(currValue.currency ? currValue.currency : 0);
+                        }, 0);
+                        return result;
+                    },
+                    editData: function(record) {
+                        Object.assign({},record).log
+                        this.editChache = Object.assign({},record)
+                        this.editedRecord = record.id
+                    },
+                    validateRow: function(record){
+                        return !window.isNaN(record.currency)
+                            && record.location.length > 0
+                            && record.name.length > 0;
+                    },
+                    saveData: function(record){
+                        let valid = this.validateRow(record);
+                        if(!valid){
+                            let changeItem = this.curTab.find((item)=>{
+                               return item.id === this.editChache.id
+                            });
+                            for(key in changeItem){
+                                changeItem[key] = this.editChache[key];
+                            }
+                            alert('Invalid date');
+                        }
+                        this.editedRecord = null;
+                    }
+                },
+            });
+
+            const routes = [
+                {path: '/', component: component},
+                {path: '/detail/:id', name: 'detail', component: Foo, props: true},
+            ]
+
+            const router = new VueRouter({
+                routes
+            })
+
+            const app = new Vue({
+                router
+            }).$mount('#root')
+
+        });
+
+</script>
+</body>
+</html>
